@@ -1,0 +1,21 @@
+<Window x:Class="PlcDiff.App.Views.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:ui="http://schemas.modernwpf.com/2019"
+        xmlns:viewModels="clr-namespace:PlcDiff.App.ViewModels"
+        mc:Ignorable="d"
+        Title="PlcDiff" Height="600" Width="1000">
+  <Window.DataContext>
+    <viewModels:MainViewModel />
+  </Window.DataContext>
+
+  <Grid>
+    <ui:CommandBar DefaultLabelPosition="Bottom">
+      <ui:AppBarButton Icon="OpenFile" Label="Open A" Command="{Binding OpenProjectACommand}" />
+      <ui:AppBarButton Icon="OpenFile" Label="Open B" Command="{Binding OpenProjectBCommand}" />
+      <ui:AppBarButton Icon="Play" Label="Compare" Command="{Binding CompareCommand}" />
+    </ui:CommandBar>
+  </Grid>
+</Window>

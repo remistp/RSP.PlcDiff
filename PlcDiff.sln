@@ -1,0 +1,24 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31912.275
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PlcDiff.Core", "PlcDiff.Core\PlcDiff.Core.csproj", "{A40B9B8D-ED2C-48E1-A0D8-30827E6AD201}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PlcDiff.App", "PlcDiff.App\PlcDiff.App.csproj", "{3A0150C5-92A3-439F-AD55-6A0AB456C7BF}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A40B9B8D-ED2C-48E1-A0D8-30827E6AD201}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A40B9B8D-ED2C-48E1-A0D8-30827E6AD201}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A40B9B8D-ED2C-48E1-A0D8-30827E6AD201}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A40B9B8D-ED2C-48E1-A0D8-30827E6AD201}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3A0150C5-92A3-439F-AD55-6A0AB456C7BF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3A0150C5-92A3-439F-AD55-6A0AB456C7BF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3A0150C5-92A3-439F-AD55-6A0AB456C7BF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3A0150C5-92A3-439F-AD55-6A0AB456C7BF}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
