@@ -19,3 +19,11 @@ public enum ChangeKind
     Modified,
     Moved
 }
+
+public enum ChangeItemType
+{
+    Program,
+    Routine,
+    Rung,
+    Tag
+}
