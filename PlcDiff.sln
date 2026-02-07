@@ -6,6 +6,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PlcDiff.Core", "PlcDiff.Cor
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PlcDiff.App", "PlcDiff.App\PlcDiff.App.csproj", "{3A0150C5-92A3-439F-AD55-6A0AB456C7BF}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PlcDiff.Tests", "PlcDiff.Tests\PlcDiff.Tests.csproj", "{C827799D-20D8-4139-A8E9-15C9F156B676}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -20,5 +22,9 @@ Global
 		{3A0150C5-92A3-439F-AD55-6A0AB456C7BF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3A0150C5-92A3-439F-AD55-6A0AB456C7BF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3A0150C5-92A3-439F-AD55-6A0AB456C7BF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C827799D-20D8-4139-A8E9-15C9F156B676}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C827799D-20D8-4139-A8E9-15C9F156B676}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C827799D-20D8-4139-A8E9-15C9F156B676}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C827799D-20D8-4139-A8E9-15C9F156B676}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
