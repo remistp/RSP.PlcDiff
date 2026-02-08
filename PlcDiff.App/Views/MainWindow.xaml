@@ -38,7 +38,7 @@
 
       <Border Grid.Column="0" CornerRadius="6" BorderBrush="#33000000" BorderThickness="1" Padding="8" Margin="0,0,8,0">
         <DockPanel>
-          <TextBlock DockPanel.Dock="Top" Text="Programs & Routines" FontWeight="SemiBold" Margin="0,0,0,8" />
+          <TextBlock DockPanel.Dock="Top" Text="Programs &amp; Routines" FontWeight="SemiBold" Margin="0,0,0,8" />
           <TreeView ItemsSource="{Binding ProgramTree}">
             <TreeView.ItemTemplate>
               <HierarchicalDataTemplate ItemsSource="{Binding Children}">
