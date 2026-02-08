@@ -5,17 +5,91 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:ui="http://schemas.modernwpf.com/2019"
         xmlns:viewModels="clr-namespace:PlcDiff.App.ViewModels"
+        xmlns:converters="clr-namespace:PlcDiff.App.Converters"
         mc:Ignorable="d"
-        Title="PlcDiff" Height="600" Width="1000">
+        Title="PlcDiff" Height="700" Width="1200">
   <Window.DataContext>
     <viewModels:MainViewModel />
   </Window.DataContext>
 
+  <Window.Resources>
+    <converters:ChangeKindToBrushConverter x:Key="ChangeKindToBrushConverter" />
+    <converters:ChangeKindToSymbolConverter x:Key="ChangeKindToSymbolConverter" />
+  </Window.Resources>
+
   <Grid>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="*" />
+    </Grid.RowDefinitions>
+
     <ui:CommandBar DefaultLabelPosition="Bottom">
       <ui:AppBarButton Icon="OpenFile" Label="Open A" Command="{Binding OpenProjectACommand}" />
       <ui:AppBarButton Icon="OpenFile" Label="Open B" Command="{Binding OpenProjectBCommand}" />
       <ui:AppBarButton Icon="Play" Label="Compare" Command="{Binding CompareCommand}" />
     </ui:CommandBar>
+
+    <Grid Grid.Row="1" Margin="12">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="2*" />
+        <ColumnDefinition Width="3*" />
+        <ColumnDefinition Width="4*" />
+      </Grid.ColumnDefinitions>
+
+      <Border Grid.Column="0" CornerRadius="6" BorderBrush="#33000000" BorderThickness="1" Padding="8" Margin="0,0,8,0">
+        <DockPanel>
+          <TextBlock DockPanel.Dock="Top" Text="Programs & Routines" FontWeight="SemiBold" Margin="0,0,0,8" />
+          <TreeView ItemsSource="{Binding ProgramTree}">
+            <TreeView.ItemTemplate>
+              <HierarchicalDataTemplate ItemsSource="{Binding Children}">
+                <TextBlock Text="{Binding Name}" />
+              </HierarchicalDataTemplate>
+            </TreeView.ItemTemplate>
+          </TreeView>
+        </DockPanel>
+      </Border>
+
+      <Border Grid.Column="1" CornerRadius="6" BorderBrush="#33000000" BorderThickness="1" Padding="8" Margin="0,0,8,0">
+        <DockPanel>
+          <TextBlock DockPanel.Dock="Top" Text="Changes" FontWeight="SemiBold" Margin="0,0,0,8" />
+          <ListView ItemsSource="{Binding ChangeItems}" SelectedItem="{Binding SelectedChange}" BorderThickness="0">
+            <ListView.ItemTemplate>
+              <DataTemplate>
+                <StackPanel Orientation="Horizontal" Margin="0,4">
+                  <ui:SymbolIcon Symbol="{Binding ChangeKind, Converter={StaticResource ChangeKindToSymbolConverter}}"
+                                 Foreground="{Binding ChangeKind, Converter={StaticResource ChangeKindToBrushConverter}}"
+                                 Width="20" Height="20" Margin="0,0,8,0" />
+                  <StackPanel>
+                    <TextBlock Text="{Binding Summary}" FontWeight="SemiBold" />
+                    <TextBlock Text="{Binding Path}" Foreground="#88000000" FontSize="12" />
+                  </StackPanel>
+                </StackPanel>
+              </DataTemplate>
+            </ListView.ItemTemplate>
+          </ListView>
+        </DockPanel>
+      </Border>
+
+      <Border Grid.Column="2" CornerRadius="6" BorderBrush="#33000000" BorderThickness="1" Padding="8">
+        <DockPanel>
+          <TextBlock DockPanel.Dock="Top" Text="Details" FontWeight="SemiBold" Margin="0,0,0,8" />
+          <Grid>
+            <Grid.RowDefinitions>
+              <RowDefinition Height="Auto" />
+              <RowDefinition Height="*" />
+              <RowDefinition Height="Auto" />
+              <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <TextBlock Grid.Row="0" Text="Before" FontWeight="SemiBold" Margin="0,0,0,8" />
+            <TextBox Grid.Row="1" Text="{Binding SelectedChange.BeforeText}"
+                     IsReadOnly="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" />
+            <TextBlock Grid.Row="2" Text="After" FontWeight="SemiBold" Margin="0,8,0,8" />
+            <TextBox Grid.Row="3" Text="{Binding SelectedChange.AfterText}"
+                     IsReadOnly="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" />
+          </Grid>
+        </DockPanel>
+      </Border>
+    </Grid>
   </Grid>
 </Window>

@@ -64,7 +64,8 @@ public sealed class ProjectDiffer
                     Type = ChangeItemType.Program,
                     Path = name,
                     ChangeKind = ChangeKind.Removed,
-                    Summary = $"Program removed: {name}"
+                    Summary = $"Program removed: {name}",
+                    BeforeText = name
                 });
                 continue;
             }
@@ -89,7 +90,8 @@ public sealed class ProjectDiffer
                     Type = ChangeItemType.Program,
                     Path = name,
                     ChangeKind = ChangeKind.Added,
-                    Summary = $"Program added: {name}"
+                    Summary = $"Program added: {name}",
+                    AfterText = name
                 });
             }
         }
@@ -114,7 +116,8 @@ public sealed class ProjectDiffer
                     Type = ChangeItemType.Routine,
                     Path = $"{programName}/{routineName}",
                     ChangeKind = ChangeKind.Removed,
-                    Summary = $"Routine removed: {programName}/{routineName}"
+                    Summary = $"Routine removed: {programName}/{routineName}",
+                    BeforeText = routineName
                 });
                 anyChanges = true;
                 continue;
@@ -136,7 +139,8 @@ public sealed class ProjectDiffer
                     Type = ChangeItemType.Routine,
                     Path = $"{programName}/{routineName}",
                     ChangeKind = ChangeKind.Added,
-                    Summary = $"Routine added: {programName}/{routineName}"
+                    Summary = $"Routine added: {programName}/{routineName}",
+                    AfterText = routineName
                 });
                 anyChanges = true;
             }
@@ -165,7 +169,8 @@ public sealed class ProjectDiffer
                     Type = ChangeItemType.Rung,
                     Path = $"{programName}/{routineName}",
                     ChangeKind = ChangeKind.Removed,
-                    Summary = $"Rung removed at index {rungA.Index}"
+                    Summary = $"Rung removed at index {rungA.Index}",
+                    BeforeText = rungA.RawText
                 });
                 anyChanges = true;
                 continue;
@@ -178,7 +183,9 @@ public sealed class ProjectDiffer
                     Type = ChangeItemType.Rung,
                     Path = $"{programName}/{routineName}",
                     ChangeKind = ChangeKind.Modified,
-                    Summary = $"Rung modified at index {rungA.Index}"
+                    Summary = $"Rung modified at index {rungA.Index}",
+                    BeforeText = rungA.RawText,
+                    AfterText = rungB.RawText
                 });
                 anyChanges = true;
                 continue;
@@ -191,7 +198,9 @@ public sealed class ProjectDiffer
                     Type = ChangeItemType.Rung,
                     Path = $"{programName}/{routineName}",
                     ChangeKind = ChangeKind.Moved,
-                    Summary = $"Rung moved from {rungA.Index} to {rungB.Index}"
+                    Summary = $"Rung moved from {rungA.Index} to {rungB.Index}",
+                    BeforeText = rungA.RawText,
+                    AfterText = rungB.RawText
                 });
                 anyChanges = true;
             }
@@ -206,7 +215,8 @@ public sealed class ProjectDiffer
                     Type = ChangeItemType.Rung,
                     Path = $"{programName}/{routineName}",
                     ChangeKind = ChangeKind.Added,
-                    Summary = $"Rung added at index {rungB.Index}"
+                    Summary = $"Rung added at index {rungB.Index}",
+                    AfterText = rungB.RawText
                 });
                 anyChanges = true;
             }
@@ -234,7 +244,8 @@ public sealed class ProjectDiffer
                     Type = ChangeItemType.Tag,
                     Path = programName,
                     ChangeKind = ChangeKind.Removed,
-                    Summary = $"Tag removed: {name}"
+                    Summary = $"Tag removed: {name}",
+                    BeforeText = FormatTag(tagA)
                 });
                 anyChanges = true;
                 continue;
@@ -247,7 +258,9 @@ public sealed class ProjectDiffer
                     Type = ChangeItemType.Tag,
                     Path = programName,
                     ChangeKind = ChangeKind.Modified,
-                    Summary = $"Tag modified: {name}"
+                    Summary = $"Tag modified: {name}",
+                    BeforeText = FormatTag(tagA),
+                    AfterText = FormatTag(tagB)
                 });
                 anyChanges = true;
             }
@@ -262,7 +275,8 @@ public sealed class ProjectDiffer
                     Type = ChangeItemType.Tag,
                     Path = programName,
                     ChangeKind = ChangeKind.Added,
-                    Summary = $"Tag added: {name}"
+                    Summary = $"Tag added: {name}",
+                    AfterText = FormatTag(tagB)
                 });
                 anyChanges = true;
             }
@@ -285,7 +299,8 @@ public sealed class ProjectDiffer
                     Type = ChangeItemType.Tag,
                     Path = "Controller",
                     ChangeKind = ChangeKind.Removed,
-                    Summary = $"Controller tag removed: {name}"
+                    Summary = $"Controller tag removed: {name}",
+                    BeforeText = FormatTag(tagA)
                 });
                 continue;
             }
@@ -297,7 +312,9 @@ public sealed class ProjectDiffer
                     Type = ChangeItemType.Tag,
                     Path = "Controller",
                     ChangeKind = ChangeKind.Modified,
-                    Summary = $"Controller tag modified: {name}"
+                    Summary = $"Controller tag modified: {name}",
+                    BeforeText = FormatTag(tagA),
+                    AfterText = FormatTag(tagB)
                 });
             }
         }
@@ -311,10 +328,17 @@ public sealed class ProjectDiffer
                     Type = ChangeItemType.Tag,
                     Path = "Controller",
                     ChangeKind = ChangeKind.Added,
-                    Summary = $"Controller tag added: {name}"
+                    Summary = $"Controller tag added: {name}",
+                    AfterText = FormatTag(tagsB[name])
                 });
             }
         }
+    }
+
+    private static string FormatTag(TagModel tag)
+    {
+        return $"{tag.Name} : {tag.DataType}" +
+               (string.IsNullOrWhiteSpace(tag.InitialValue) ? string.Empty : $" = {tag.InitialValue}");
     }
 
     private static bool TagEquals(TagModel tagA, TagModel tagB)
