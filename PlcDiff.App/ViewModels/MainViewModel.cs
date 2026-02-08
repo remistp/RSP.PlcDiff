@@ -5,6 +5,7 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.Win32;
 using PlcDiff.App.Models;
 using PlcDiff.Core.Diff;
+using PlcDiff.Core.Ladder;
 using PlcDiff.Core.Models;
 using PlcDiff.Core.Parsing;
 
@@ -32,11 +33,19 @@ public sealed class MainViewModel : ObservableObject
 
     public ObservableCollection<TreeNodeViewModel> ProgramTree { get; } = new();
     public ObservableCollection<ChangeItem> ChangeItems { get; } = new();
+    public ObservableCollection<LadderToken> BeforeTokens { get; } = new();
+    public ObservableCollection<LadderToken> AfterTokens { get; } = new();
 
     public ChangeItem? SelectedChange
     {
         get => _selectedChange;
-        set => SetProperty(ref _selectedChange, value);
+        set
+        {
+            if (SetProperty(ref _selectedChange, value))
+            {
+                UpdateTokens();
+            }
+        }
     }
 
     private void OnOpenProjectA()
@@ -116,6 +125,27 @@ public sealed class MainViewModel : ObservableObject
         ChangeItems.Clear();
         SelectedChange = null;
         CompareCommand.NotifyCanExecuteChanged();
+    }
+
+    private void UpdateTokens()
+    {
+        BeforeTokens.Clear();
+        AfterTokens.Clear();
+
+        if (SelectedChange == null)
+        {
+            return;
+        }
+
+        foreach (var token in LadderTokenizer.Tokenize(SelectedChange.BeforeText))
+        {
+            BeforeTokens.Add(token);
+        }
+
+        foreach (var token in LadderTokenizer.Tokenize(SelectedChange.AfterText))
+        {
+            AfterTokens.Add(token);
+        }
     }
 
     private static string? ShowOpenFileDialog()
