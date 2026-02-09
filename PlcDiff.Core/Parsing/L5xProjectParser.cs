@@ -165,7 +165,9 @@ public sealed class L5xProjectParser
             return null;
         }
 
-        var rockwellId = reader.GetAttribute("ID") ?? reader.GetAttribute("Id");
+        var rockwellId = reader.GetAttribute("ID")
+            ?? reader.GetAttribute("Id")
+            ?? reader.GetAttribute("Number");
         string? rawText = null;
 
         using var subtree = reader.ReadSubtree();
