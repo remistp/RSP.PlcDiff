@@ -182,8 +182,6 @@ public sealed class L5xProjectParser
             }
         }
 
-        reader.Read();
-
         rawText ??= string.Empty;
         var normalized = RungTextNormalizer.Normalize(rawText);
         var key = Hashing.ComputeKey(normalized, rockwellId);
@@ -235,7 +233,6 @@ public sealed class L5xProjectParser
                 }
             }
 
-            reader.Read();
         }
 
         return new TagModel
