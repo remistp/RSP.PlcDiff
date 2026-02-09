@@ -44,11 +44,6 @@ public static class LadderTokenizer
                 depth = matchDepth;
             }
 
-            if (instruction == LadderInstructionType.Ote)
-            {
-                depth = 0;
-            }
-
             tokens.Add(new LadderToken
             {
                 Instruction = instruction,
