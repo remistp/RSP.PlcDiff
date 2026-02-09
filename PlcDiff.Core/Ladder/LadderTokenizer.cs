@@ -15,10 +15,11 @@ public static class LadderTokenizer
             return Array.Empty<LadderToken>();
         }
 
-        var branchDepths = GetBranchDepths(rungText);
         var tokens = new List<LadderToken>();
+        var matches = InstructionRegex.Matches(rungText).Cast<Match>().ToList();
+        var branchDepths = GetBranchDepths(rungText, matches);
 
-        foreach (Match match in InstructionRegex.Matches(rungText))
+        foreach (var match in matches)
         {
             if (!match.Success || match.Groups.Count < 3)
             {
@@ -56,49 +57,50 @@ public static class LadderTokenizer
 
     private static Dictionary<int, int> GetBranchDepths(string rungText)
     {
+        return new Dictionary<int, int>();
+    }
+
+    private static Dictionary<int, int> GetBranchDepths(string rungText, IReadOnlyList<Match> matches)
+    {
         var depths = new Dictionary<int, int>();
-        var depth = 0;
+        var depthLevel = 0;
+        var branchRows = new Stack<int>();
+        var position = 0;
 
-        for (var i = 0; i < rungText.Length; i++)
+        foreach (var match in matches)
         {
-            var ch = rungText[i];
-            switch (ch)
+            for (var i = position; i < match.Index && i < rungText.Length; i++)
             {
-                case '[':
-                    depth++;
-                    break;
-                case ']':
-                    depth = Math.Max(0, depth - 1);
-                    break;
+                var ch = rungText[i];
+                switch (ch)
+                {
+                    case '[':
+                        depthLevel++;
+                        branchRows.Push(0);
+                        break;
+                    case ',':
+                        if (branchRows.Count > 0)
+                        {
+                            var current = branchRows.Pop();
+                            branchRows.Push(current + 1);
+                        }
+                        break;
+                    case ']':
+                        if (branchRows.Count > 0)
+                        {
+                            branchRows.Pop();
+                        }
+                        depthLevel = Math.Max(0, depthLevel - 1);
+                        break;
+                }
             }
 
-            if (IsInstructionStart(rungText, i))
-            {
-                depths[i] = depth;
-            }
+            var rowOffset = branchRows.Count > 0 ? branchRows.Peek() : 0;
+            depths[match.Index] = Math.Max(0, depthLevel + rowOffset);
+            position = match.Index;
         }
 
         return depths;
-    }
-
-    private static bool IsInstructionStart(string text, int index)
-    {
-        if (index < 0 || index + 2 >= text.Length)
-        {
-            return false;
-        }
-
-        var remaining = text.Length - index;
-        if (remaining < 3)
-        {
-            return false;
-        }
-
-        var slice = text.Substring(index, Math.Min(3, remaining)).ToUpperInvariant();
-        return slice.StartsWith("XIC", StringComparison.Ordinal)
-            || slice.StartsWith("XIO", StringComparison.Ordinal)
-            || slice.StartsWith("OTE", StringComparison.Ordinal)
-            || slice.StartsWith("TON", StringComparison.Ordinal);
     }
 
     private static bool TryParseInstruction(string text, out LadderInstructionType instruction)

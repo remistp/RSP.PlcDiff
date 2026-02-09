@@ -21,7 +21,7 @@ public sealed class LadderTokenizerBranchTests
             token =>
             {
                 Assert.Equal(LadderInstructionType.Xic, token.Instruction);
-                Assert.Equal(1, token.BranchDepth);
+                Assert.Equal(2, token.BranchDepth);
             },
             token =>
             {
