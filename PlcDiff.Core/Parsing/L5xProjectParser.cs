@@ -180,7 +180,7 @@ public sealed class L5xProjectParser
             }
         }
 
-        reader.Skip();
+        reader.Read();
 
         rawText ??= string.Empty;
         var normalized = RungTextNormalizer.Normalize(rawText);
@@ -233,7 +233,7 @@ public sealed class L5xProjectParser
                 }
             }
 
-            reader.Skip();
+            reader.Read();
         }
 
         return new TagModel
