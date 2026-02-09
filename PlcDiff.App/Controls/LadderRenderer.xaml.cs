@@ -138,31 +138,26 @@ public partial class LadderRenderer : UserControl
             return;
         }
 
-        var outputCoil = tokens.LastOrDefault(token => token.Instruction == LadderInstructionType.Ote);
-        var renderTokens = outputCoil == null
-            ? tokens
-            : tokens.Where(token => token != outputCoil).ToList();
-
-        var groupedTokens = renderTokens
+        var groupedTokens = tokens
             .GroupBy(token => token.BranchDepth)
             .ToDictionary(group => group.Key, group => group.ToList());
 
         foreach (var (branchDepth, branchTokens) in groupedTokens)
         {
             var rowCenterY = railTop + branchDepth * cellHeight + cellHeight / 2;
-            for (var col = 0; col < columns && col < branchTokens.Count; col++)
+            var nonOutputTokens = branchTokens.Where(token => token.Instruction != LadderInstructionType.Ote).ToList();
+            for (var col = 0; col < columns && col < nonOutputTokens.Count; col++)
             {
-                var token = branchTokens[col];
+                var token = nonOutputTokens[col];
                 var cellLeft = leftRailX + col * cellWidth + 12;
                 DrawInstruction(token, cellLeft, rowCenterY);
             }
-        }
 
-        if (outputCoil != null)
-        {
-            var coilRowCenterY = railTop + cellHeight / 2;
-            var coilX = rightRailX - 70;
-            DrawInstruction(outputCoil, coilX, coilRowCenterY);
+            foreach (var outputToken in branchTokens.Where(token => token.Instruction == LadderInstructionType.Ote))
+            {
+                var coilX = leftRailX + (columns - 1) * cellWidth + 12;
+                DrawInstruction(outputToken, coilX, rowCenterY);
+            }
         }
     }
 
