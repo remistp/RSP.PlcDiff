@@ -33,8 +33,7 @@
     <Grid Grid.Row="1" Margin="12">
       <Grid.ColumnDefinitions>
         <ColumnDefinition Width="2*" />
-        <ColumnDefinition Width="3*" />
-        <ColumnDefinition Width="4*" />
+        <ColumnDefinition Width="5*" />
       </Grid.ColumnDefinitions>
 
       <Border Grid.Column="0" CornerRadius="6" BorderBrush="#33000000" BorderThickness="1" Padding="8" Margin="0,0,8,0">
@@ -47,12 +46,8 @@
               </HierarchicalDataTemplate>
             </TreeView.ItemTemplate>
           </TreeView>
-        </DockPanel>
-      </Border>
 
-      <Border Grid.Column="1" CornerRadius="6" BorderBrush="#33000000" BorderThickness="1" Padding="8" Margin="0,0,8,0">
-        <DockPanel>
-          <TextBlock DockPanel.Dock="Top" Text="Changes" FontWeight="SemiBold" Margin="0,0,0,8" />
+          <TextBlock DockPanel.Dock="Top" Text="Changes" FontWeight="SemiBold" Margin="0,12,0,8" />
           <ListView ItemsSource="{Binding ChangeItems}" SelectedItem="{Binding SelectedChange}" BorderThickness="0">
             <ListView.ItemTemplate>
               <DataTemplate>
@@ -71,61 +66,49 @@
         </DockPanel>
       </Border>
 
-      <Border Grid.Column="2" CornerRadius="6" BorderBrush="#33000000" BorderThickness="1" Padding="8">
+      <Border Grid.Column="1" CornerRadius="6" BorderBrush="#33000000" BorderThickness="1" Padding="8">
         <DockPanel>
-          <TextBlock DockPanel.Dock="Top" Text="Details" FontWeight="SemiBold" Margin="0,0,0,8" />
+          <TextBlock DockPanel.Dock="Top" Text="Hunk Diff" FontWeight="SemiBold" Margin="0,0,0,8" />
           <ScrollViewer VerticalScrollBarVisibility="Auto">
             <Grid>
               <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
-                <RowDefinition Height="*" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
               </Grid.RowDefinitions>
-
-              <TextBlock Grid.Row="0" Text="Before" FontWeight="SemiBold" Margin="0,0,0,8" />
-              <TextBox Grid.Row="1" Text="{Binding SelectedChange.BeforeText}"
-                       IsReadOnly="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" />
-              <TextBlock Grid.Row="2" Text="Before Ladder" FontWeight="SemiBold" Margin="0,8,0,8" />
-              <controls:LadderRenderer Grid.Row="3" Tokens="{Binding BeforeTokens}"
-                                       ChangeKind="{Binding SelectedChange.ChangeKind}" />
-
-              <TextBlock Grid.Row="4" Text="After" FontWeight="SemiBold" Margin="0,12,0,8" />
-              <TextBox Grid.Row="5" Text="{Binding SelectedChange.AfterText}"
-                       IsReadOnly="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" />
-              <TextBlock Grid.Row="6" Text="After Ladder" FontWeight="SemiBold" Margin="0,8,0,8" />
-              <controls:LadderRenderer Grid.Row="7" Tokens="{Binding AfterTokens}"
-                                       ChangeKind="{Binding SelectedChange.ChangeKind}" />
-
-              <TextBlock Grid.Row="8" Text="Routine Rung Changes" FontWeight="SemiBold" Margin="0,12,0,8" />
-              <ItemsControl Grid.Row="9" ItemsSource="{Binding RungChanges}">
+              <TextBlock Grid.Row="0" Text="{Binding SelectedChange.Path}" FontWeight="SemiBold" />
+              <TextBlock Grid.Row="1" Text="HUNK 1: Changed Rungs" FontWeight="SemiBold" Margin="0,8,0,8" />
+              <ItemsControl Grid.Row="2" ItemsSource="{Binding RungHunks}">
                 <ItemsControl.ItemTemplate>
                   <DataTemplate>
-                    <Border BorderBrush="#33000000" BorderThickness="1" CornerRadius="4" Padding="8" Margin="0,0,0,8">
-                      <StackPanel>
-                        <TextBlock Text="{Binding Change.Summary}" FontWeight="SemiBold" />
-                        <Grid Margin="0,6,0,0">
-                          <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="*" />
-                          </Grid.ColumnDefinitions>
-                          <StackPanel Grid.Column="0" Margin="0,0,8,0">
-                            <TextBlock Text="Before" FontWeight="SemiBold" Margin="0,0,0,4" />
-                            <controls:LadderRenderer Tokens="{Binding BeforeTokens}" ChangeKind="{Binding Change.ChangeKind}" />
-                          </StackPanel>
-                          <StackPanel Grid.Column="1">
-                            <TextBlock Text="After" FontWeight="SemiBold" Margin="0,0,0,4" />
-                            <controls:LadderRenderer Tokens="{Binding AfterTokens}" ChangeKind="{Binding Change.ChangeKind}" />
-                          </StackPanel>
-                        </Grid>
-                      </StackPanel>
-                    </Border>
+                    <StackPanel>
+                      <ItemsControl ItemsSource="{Binding Changes}">
+                        <ItemsControl.ItemTemplate>
+                          <DataTemplate>
+                            <Border BorderBrush="{Binding Change.ChangeKind, Converter={StaticResource ChangeKindToBrushConverter}}"
+                                    BorderThickness="2" CornerRadius="4" Padding="8" Margin="0,0,0,12">
+                              <StackPanel>
+                                <TextBlock Text="{Binding Change.Summary}" FontWeight="SemiBold" Margin="0,0,0,6" />
+                                <Grid>
+                                  <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                  </Grid.ColumnDefinitions>
+                                  <StackPanel Grid.Column="0" Margin="0,0,8,0">
+                                    <TextBlock Text="Before" FontWeight="SemiBold" Margin="0,0,0,4" />
+                                    <controls:LadderRenderer Tokens="{Binding BeforeTokens}" ChangeKind="{Binding Change.ChangeKind}" />
+                                  </StackPanel>
+                                  <StackPanel Grid.Column="1">
+                                    <TextBlock Text="After" FontWeight="SemiBold" Margin="0,0,0,4" />
+                                    <controls:LadderRenderer Tokens="{Binding AfterTokens}" ChangeKind="{Binding Change.ChangeKind}" />
+                                  </StackPanel>
+                                </Grid>
+                              </StackPanel>
+                            </Border>
+                          </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                      </ItemsControl>
+                    </StackPanel>
                   </DataTemplate>
                 </ItemsControl.ItemTemplate>
               </ItemsControl>
