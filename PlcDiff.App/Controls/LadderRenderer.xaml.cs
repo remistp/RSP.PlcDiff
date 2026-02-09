@@ -104,6 +104,7 @@ public partial class LadderRenderer : UserControl
 
         var highlightBrush = ResolveChangeHighlight(ChangeKind);
         var lineBrush = new SolidColorBrush(Color.FromRgb(60, 60, 60));
+        var maxBranchDepth = tokens.Count == 0 ? 0 : tokens.Max(token => token.BranchDepth);
         for (var row = 0; row < rows; row++)
         {
             var rowTop = railTop + row * cellHeight;
@@ -131,6 +132,34 @@ public partial class LadderRenderer : UserControl
                 Canvas.SetTop(highlight, rowTop + 4);
                 Surface.Children.Add(highlight);
             }
+        }
+
+        if (maxBranchDepth > 0)
+        {
+            var branchStartX = leftRailX + 28;
+            var branchEndX = rightRailX - 28;
+            var branchTop = railTop + cellHeight / 2;
+            var branchBottom = railTop + maxBranchDepth * cellHeight + cellHeight / 2;
+
+            Surface.Children.Add(new Line
+            {
+                X1 = branchStartX,
+                X2 = branchStartX,
+                Y1 = branchTop,
+                Y2 = branchBottom,
+                Stroke = lineBrush,
+                StrokeThickness = 2
+            });
+
+            Surface.Children.Add(new Line
+            {
+                X1 = branchEndX,
+                X2 = branchEndX,
+                Y1 = branchTop,
+                Y2 = branchBottom,
+                Stroke = lineBrush,
+                StrokeThickness = 2
+            });
         }
 
         if (tokens.Count == 0)
