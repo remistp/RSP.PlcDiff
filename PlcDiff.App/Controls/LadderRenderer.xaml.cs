@@ -56,21 +56,31 @@ public partial class LadderRenderer : UserControl
 
         Surface.Children.Clear();
 
-        var width = ActualWidth > 0 ? ActualWidth : 300;
-        var height = 100.0;
-        Surface.Width = width - 8;
+        var tokens = Tokens?.ToList() ?? new List<LadderToken>();
+        var width = Math.Max(ActualWidth - 8, 200);
+        var cellWidth = 110.0;
+        var cellHeight = 60.0;
+        var railOffset = 12.0;
+        var railTop = 6.0;
+        var railBottomPadding = 6.0;
+
+        var columns = Math.Max(1, (int)Math.Floor((width - railOffset * 2) / cellWidth));
+        var rows = tokens.Count == 0 ? 1 : (int)Math.Ceiling(tokens.Count / (double)columns);
+        var height = rows * cellHeight + railTop + railBottomPadding;
+
+        Surface.Width = width;
         Surface.Height = height;
 
-        var leftRailX = 8.0;
-        var rightRailX = Surface.Width - 8.0;
+        var leftRailX = railOffset;
+        var rightRailX = width - railOffset;
         var railBrush = new SolidColorBrush(Color.FromRgb(80, 80, 80));
 
         Surface.Children.Add(new Line
         {
             X1 = leftRailX,
             X2 = leftRailX,
-            Y1 = 4,
-            Y2 = height - 4,
+            Y1 = railTop,
+            Y2 = height - railBottomPadding,
             Stroke = railBrush,
             StrokeThickness = 2
         });
@@ -79,74 +89,201 @@ public partial class LadderRenderer : UserControl
         {
             X1 = rightRailX,
             X2 = rightRailX,
-            Y1 = 4,
-            Y2 = height - 4,
+            Y1 = railTop,
+            Y2 = height - railBottomPadding,
             Stroke = railBrush,
             StrokeThickness = 2
         });
 
-        var tokens = Tokens?.ToList() ?? new List<LadderToken>();
         if (tokens.Count == 0)
         {
             return;
         }
 
-        var blockBrush = ResolveChangeBrush(ChangeKind);
-        var blockWidth = 90.0;
-        var blockHeight = 36.0;
-        var spacing = 12.0;
-        var startX = leftRailX + 12.0;
-        var centerY = height / 2 - blockHeight / 2;
+        var highlightBrush = ResolveChangeHighlight(ChangeKind);
+        var lineBrush = new SolidColorBrush(Color.FromRgb(60, 60, 60));
+        var tokenIndex = 0;
 
-        for (var i = 0; i < tokens.Count; i++)
+        for (var row = 0; row < rows; row++)
         {
-            var token = tokens[i];
-            var x = startX + i * (blockWidth + spacing);
-            if (x + blockWidth > rightRailX - 8)
+            var rowTop = railTop + row * cellHeight;
+            var rowCenterY = rowTop + cellHeight / 2;
+
+            Surface.Children.Add(new Line
             {
-                break;
+                X1 = leftRailX,
+                X2 = rightRailX,
+                Y1 = rowCenterY,
+                Y2 = rowCenterY,
+                Stroke = lineBrush,
+                StrokeThickness = 1
+            });
+
+            if (highlightBrush != null)
+            {
+                var highlight = new Rectangle
+                {
+                    Width = rightRailX - leftRailX,
+                    Height = cellHeight - 8,
+                    Fill = highlightBrush
+                };
+                Canvas.SetLeft(highlight, leftRailX);
+                Canvas.SetTop(highlight, rowTop + 4);
+                Surface.Children.Add(highlight);
             }
 
-            var rect = new Rectangle
+            for (var col = 0; col < columns && tokenIndex < tokens.Count; col++, tokenIndex++)
             {
-                Width = blockWidth,
-                Height = blockHeight,
-                RadiusX = 4,
-                RadiusY = 4,
-                Fill = blockBrush,
-                Stroke = Brushes.Black,
-                StrokeThickness = 1
-            };
-
-            Canvas.SetLeft(rect, x);
-            Canvas.SetTop(rect, centerY);
-            Surface.Children.Add(rect);
-
-            var text = new TextBlock
-            {
-                Text = $"{token.Instruction}\n{token.Operand}",
-                Foreground = Brushes.White,
-                FontSize = 11,
-                TextAlignment = TextAlignment.Center,
-                Width = blockWidth,
-                TextWrapping = TextWrapping.Wrap
-            };
-
-            Canvas.SetLeft(text, x);
-            Canvas.SetTop(text, centerY + 4);
-            Surface.Children.Add(text);
+                var token = tokens[tokenIndex];
+                var cellLeft = leftRailX + col * cellWidth + 12;
+                DrawInstruction(token, cellLeft, rowCenterY);
+            }
         }
     }
 
-    private static Brush ResolveChangeBrush(ChangeKind changeKind)
+    private void DrawInstruction(LadderToken token, double x, double centerY)
+    {
+        switch (token.Instruction)
+        {
+            case LadderInstructionType.Xic:
+                DrawContact(token, x, centerY, false);
+                break;
+            case LadderInstructionType.Xio:
+                DrawContact(token, x, centerY, true);
+                break;
+            case LadderInstructionType.Ote:
+                DrawCoil(token, x, centerY);
+                break;
+            case LadderInstructionType.Ton:
+                DrawTimer(token, x, centerY);
+                break;
+        }
+    }
+
+    private void DrawContact(LadderToken token, double x, double centerY, bool negated)
+    {
+        var height = 26.0;
+        var width = 54.0;
+        var left = x;
+        var right = x + width;
+        var top = centerY - height / 2;
+        var bottom = centerY + height / 2;
+
+        Surface.Children.Add(new Line
+        {
+            X1 = left,
+            X2 = left,
+            Y1 = top,
+            Y2 = bottom,
+            Stroke = Brushes.Black,
+            StrokeThickness = 2
+        });
+
+        Surface.Children.Add(new Line
+        {
+            X1 = right,
+            X2 = right,
+            Y1 = top,
+            Y2 = bottom,
+            Stroke = Brushes.Black,
+            StrokeThickness = 2
+        });
+
+        if (negated)
+        {
+            Surface.Children.Add(new Line
+            {
+                X1 = left - 3,
+                X2 = right + 3,
+                Y1 = bottom,
+                Y2 = top,
+                Stroke = Brushes.Black,
+                StrokeThickness = 2
+            });
+        }
+
+        AddOperandText(token, x, centerY + 16);
+    }
+
+    private void DrawCoil(LadderToken token, double x, double centerY)
+    {
+        var diameter = 26.0;
+        var left = x + 10;
+        var top = centerY - diameter / 2;
+
+        var ellipse = new Ellipse
+        {
+            Width = diameter,
+            Height = diameter,
+            Stroke = Brushes.Black,
+            StrokeThickness = 2
+        };
+
+        Canvas.SetLeft(ellipse, left);
+        Canvas.SetTop(ellipse, top);
+        Surface.Children.Add(ellipse);
+
+        AddOperandText(token, x, centerY + 16);
+    }
+
+    private void DrawTimer(LadderToken token, double x, double centerY)
+    {
+        var width = 70.0;
+        var height = 30.0;
+        var left = x;
+        var top = centerY - height / 2;
+
+        var rect = new Rectangle
+        {
+            Width = width,
+            Height = height,
+            Stroke = Brushes.Black,
+            StrokeThickness = 1.5,
+            Fill = Brushes.White
+        };
+
+        Canvas.SetLeft(rect, left);
+        Canvas.SetTop(rect, top);
+        Surface.Children.Add(rect);
+
+        var label = new TextBlock
+        {
+            Text = "TON",
+            FontWeight = FontWeights.SemiBold,
+            FontSize = 11
+        };
+        Canvas.SetLeft(label, left + 4);
+        Canvas.SetTop(label, top + 2);
+        Surface.Children.Add(label);
+
+        AddOperandText(token, x, centerY + 16);
+    }
+
+    private void AddOperandText(LadderToken token, double x, double y)
+    {
+        var text = new TextBlock
+        {
+            Text = token.Operand,
+            FontSize = 10,
+            Foreground = Brushes.Black,
+            Width = 90,
+            TextTrimming = TextTrimming.CharacterEllipsis
+        };
+
+        Canvas.SetLeft(text, x - 4);
+        Canvas.SetTop(text, y);
+        Surface.Children.Add(text);
+    }
+
+    private static Brush? ResolveChangeHighlight(ChangeKind changeKind)
     {
         return changeKind switch
         {
-            ChangeKind.Added => Brushes.ForestGreen,
-            ChangeKind.Removed => Brushes.IndianRed,
-            ChangeKind.Modified => Brushes.Goldenrod,
-            ChangeKind.Moved => Brushes.DodgerBlue,
-            _ => Brushes.Gray
+            ChangeKind.Added => new SolidColorBrush(Color.FromArgb(50, 46, 139, 87)),
+            ChangeKind.Removed => new SolidColorBrush(Color.FromArgb(50, 205, 92, 92)),
+            ChangeKind.Modified => new SolidColorBrush(Color.FromArgb(50, 255, 215, 0)),
+            ChangeKind.Moved => new SolidColorBrush(Color.FromArgb(50, 30, 144, 255)),
+            _ => null
         };
     }
 }
