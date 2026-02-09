@@ -65,9 +65,11 @@ public partial class LadderRenderer : UserControl
         var railBottomPadding = 6.0;
 
         var columns = Math.Max(1, (int)Math.Floor((width - railOffset * 2) / cellWidth));
-        var rows = tokens.Count == 0 ? 1 : (int)Math.Ceiling(tokens.Count / (double)columns);
+        var maxBranchDepth = tokens.Count == 0 ? 0 : tokens.Max(token => token.BranchDepth);
+        var rows = tokens.Count == 0
+            ? 1
+            : Math.Max(1, maxBranchDepth + 1);
         var height = rows * cellHeight + railTop + railBottomPadding;
-
         Surface.Width = width;
         Surface.Height = height;
 
@@ -102,8 +104,6 @@ public partial class LadderRenderer : UserControl
 
         var highlightBrush = ResolveChangeHighlight(ChangeKind);
         var lineBrush = new SolidColorBrush(Color.FromRgb(60, 60, 60));
-        var tokenIndex = 0;
-
         for (var row = 0; row < rows; row++)
         {
             var rowTop = railTop + row * cellHeight;
@@ -131,10 +131,23 @@ public partial class LadderRenderer : UserControl
                 Canvas.SetTop(highlight, rowTop + 4);
                 Surface.Children.Add(highlight);
             }
+        }
 
-            for (var col = 0; col < columns && tokenIndex < tokens.Count; col++, tokenIndex++)
+        if (tokens.Count == 0)
+        {
+            return;
+        }
+
+        var groupedTokens = tokens
+            .GroupBy(token => token.BranchDepth)
+            .ToDictionary(group => group.Key, group => group.ToList());
+
+        foreach (var (branchDepth, branchTokens) in groupedTokens)
+        {
+            var rowCenterY = railTop + branchDepth * cellHeight + cellHeight / 2;
+            for (var col = 0; col < columns && col < branchTokens.Count; col++)
             {
-                var token = tokens[tokenIndex];
+                var token = branchTokens[col];
                 var cellLeft = leftRailX + col * cellWidth + 12;
                 DrawInstruction(token, cellLeft, rowCenterY);
             }
