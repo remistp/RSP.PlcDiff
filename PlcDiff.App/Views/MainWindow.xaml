@@ -73,7 +73,7 @@
                           <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
                         <TextBlock Grid.Column="0" Text="{Binding Index}" FontWeight="SemiBold" Foreground="DodgerBlue" />
-                        <controls:LadderRenderer Grid.Column="1" Tokens="{Binding Tokens}" ChangeKind="{Binding ChangeKind}" />
+                        <controls:LadderRenderer Grid.Column="1" RawText="{Binding RawText}" ChangeKind="{Binding ChangeKind}" />
                       </Grid>
                     </Border>
                   </DataTemplate>

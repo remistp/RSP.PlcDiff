@@ -2,18 +2,19 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Shapes;
-using PlcDiff.Core.Ladder;
+using PlcDiff.Core.Ladder.Parsing;
+using PlcDiff.Core.Ladder.Layout;
 using PlcDiff.Core.Models;
 
 namespace PlcDiff.App.Controls;
 
 public partial class LadderRenderer : UserControl
 {
-    public static readonly DependencyProperty TokensProperty = DependencyProperty.Register(
-        nameof(Tokens),
-        typeof(IEnumerable<LadderToken>),
+    public static readonly DependencyProperty RawTextProperty = DependencyProperty.Register(
+        nameof(RawText),
+        typeof(string),
         typeof(LadderRenderer),
-        new PropertyMetadata(null, OnRenderPropertyChanged));
+        new PropertyMetadata(string.Empty, OnRenderPropertyChanged));
 
     public static readonly DependencyProperty ChangeKindProperty = DependencyProperty.Register(
         nameof(ChangeKind),
@@ -27,10 +28,10 @@ public partial class LadderRenderer : UserControl
         SizeChanged += (_, _) => Render();
     }
 
-    public IEnumerable<LadderToken>? Tokens
+    public string RawText
     {
-        get => (IEnumerable<LadderToken>?)GetValue(TokensProperty);
-        set => SetValue(TokensProperty, value);
+        get => (string)GetValue(RawTextProperty);
+        set => SetValue(RawTextProperty, value);
     }
 
     public ChangeKind ChangeKind
@@ -56,7 +57,6 @@ public partial class LadderRenderer : UserControl
 
         Surface.Children.Clear();
 
-        var tokens = Tokens?.ToList() ?? new List<LadderToken>();
         var width = Math.Max(ActualWidth - 8, 200);
         var cellWidth = 110.0;
         var cellHeight = 60.0;
@@ -65,10 +65,8 @@ public partial class LadderRenderer : UserControl
         var railBottomPadding = 6.0;
 
         var columns = Math.Max(1, (int)Math.Floor((width - railOffset * 2) / cellWidth));
-        var maxBranchDepth = tokens.Count == 0 ? 0 : tokens.Max(token => token.BranchDepth);
-        var rows = tokens.Count == 0
-            ? 1
-            : Math.Max(1, maxBranchDepth + 1);
+        var plan = BuildPlan();
+        var rows = Math.Max(1, plan?.Rows ?? 1);
         var height = rows * cellHeight + railTop + railBottomPadding;
         Surface.Width = width;
         Surface.Height = height;
@@ -97,14 +95,8 @@ public partial class LadderRenderer : UserControl
             StrokeThickness = 2
         });
 
-        if (tokens.Count == 0)
-        {
-            return;
-        }
-
         var highlightBrush = ResolveChangeHighlight(ChangeKind);
         var lineBrush = new SolidColorBrush(Color.FromRgb(60, 60, 60));
-        var maxBranchDepth = tokens.Count == 0 ? 0 : tokens.Max(token => token.BranchDepth);
         for (var row = 0; row < rows; row++)
         {
             var rowTop = railTop + row * cellHeight;
@@ -134,46 +126,16 @@ public partial class LadderRenderer : UserControl
             }
         }
 
-        if (tokens.Count == 0)
+        if (plan == null || plan.Instructions.Count == 0)
         {
             return;
         }
-
-        var groupedTokens = tokens
-            .GroupBy(token => token.BranchDepth)
-            .ToDictionary(group => group.Key, group => group.ToList());
-        var branchColumns = new List<int>();
-
-        foreach (var (branchDepth, branchTokens) in groupedTokens)
+        foreach (var rail in plan.Rails)
         {
-            var rowCenterY = railTop + branchDepth * cellHeight + cellHeight / 2;
-            var nonOutputTokens = branchTokens.Where(token => token.Instruction != LadderInstructionType.Ote).ToList();
-            for (var col = 0; col < columns && col < nonOutputTokens.Count; col++)
-            {
-                var token = nonOutputTokens[col];
-                var cellLeft = leftRailX + col * cellWidth + 12;
-                DrawInstruction(token, cellLeft, rowCenterY);
-                if (branchDepth > 0)
-                {
-                    branchColumns.Add(col);
-                }
-            }
-
-            foreach (var outputToken in branchTokens.Where(token => token.Instruction == LadderInstructionType.Ote))
-            {
-                var coilX = leftRailX + (columns - 1) * cellWidth + 12;
-                DrawInstruction(outputToken, coilX, rowCenterY);
-            }
-        }
-
-        if (maxBranchDepth > 0 && branchColumns.Count > 0)
-        {
-            var minCol = branchColumns.Min();
-            var maxCol = branchColumns.Max();
-            var branchStartX = leftRailX + minCol * cellWidth + 6;
-            var branchEndX = leftRailX + (maxCol + 1) * cellWidth + 6;
-            var branchTop = railTop + cellHeight / 2;
-            var branchBottom = railTop + maxBranchDepth * cellHeight + cellHeight / 2;
+            var branchStartX = leftRailX + rail.ColStart * cellWidth + 6;
+            var branchEndX = leftRailX + rail.ColEnd * cellWidth + 6;
+            var branchTop = railTop + rail.RowStart * cellHeight + cellHeight / 2;
+            var branchBottom = railTop + rail.RowEnd * cellHeight + cellHeight / 2;
 
             Surface.Children.Add(new Line
             {
@@ -195,28 +157,35 @@ public partial class LadderRenderer : UserControl
                 StrokeThickness = 2
             });
         }
+
+        foreach (var instruction in plan.Instructions)
+        {
+            var rowCenterY = railTop + instruction.Row * cellHeight + cellHeight / 2;
+            var cellLeft = leftRailX + instruction.Column * cellWidth + 12;
+            DrawInstruction(instruction, cellLeft, rowCenterY);
+        }
     }
 
-    private void DrawInstruction(LadderToken token, double x, double centerY)
+    private void DrawInstruction(LadderInstructionPlacement placement, double x, double centerY)
     {
-        switch (token.Instruction)
+        switch (placement.Opcode.ToUpperInvariant())
         {
-            case LadderInstructionType.Xic:
-                DrawContact(token, x, centerY, false);
+            case "XIC":
+                DrawContact(placement.Operands, x, centerY, false);
                 break;
-            case LadderInstructionType.Xio:
-                DrawContact(token, x, centerY, true);
+            case "XIO":
+                DrawContact(placement.Operands, x, centerY, true);
                 break;
-            case LadderInstructionType.Ote:
-                DrawCoil(token, x, centerY);
+            case "OTE":
+                DrawCoil(placement.Operands, x, centerY);
                 break;
-            case LadderInstructionType.Ton:
-                DrawTimer(token, x, centerY);
+            case "TON":
+                DrawTimer(placement.Operands, x, centerY);
                 break;
         }
     }
 
-    private void DrawContact(LadderToken token, double x, double centerY, bool negated)
+    private void DrawContact(string operand, double x, double centerY, bool negated)
     {
         var height = 26.0;
         var width = 54.0;
@@ -258,10 +227,10 @@ public partial class LadderRenderer : UserControl
             });
         }
 
-        AddOperandText(token, x, centerY + 16);
+        AddOperandText(operand, x, centerY + 16);
     }
 
-    private void DrawCoil(LadderToken token, double x, double centerY)
+    private void DrawCoil(string operand, double x, double centerY)
     {
         var diameter = 26.0;
         var left = x + 10;
@@ -279,10 +248,10 @@ public partial class LadderRenderer : UserControl
         Canvas.SetTop(ellipse, top);
         Surface.Children.Add(ellipse);
 
-        AddOperandText(token, x, centerY + 16);
+        AddOperandText(operand, x, centerY + 16);
     }
 
-    private void DrawTimer(LadderToken token, double x, double centerY)
+    private void DrawTimer(string operand, double x, double centerY)
     {
         var width = 70.0;
         var height = 30.0;
@@ -312,14 +281,14 @@ public partial class LadderRenderer : UserControl
         Canvas.SetTop(label, top + 2);
         Surface.Children.Add(label);
 
-        AddOperandText(token, x, centerY + 16);
+        AddOperandText(operand, x, centerY + 16);
     }
 
-    private void AddOperandText(LadderToken token, double x, double y)
+    private void AddOperandText(string operand, double x, double y)
     {
         var text = new TextBlock
         {
-            Text = token.Operand,
+            Text = operand,
             FontSize = 10,
             Foreground = Brushes.Black,
             Width = 90,
@@ -341,5 +310,25 @@ public partial class LadderRenderer : UserControl
             ChangeKind.Moved => new SolidColorBrush(Color.FromArgb(50, 30, 144, 255)),
             _ => null
         };
+    }
+
+    private LadderLayoutPlan? BuildPlan()
+    {
+        if (string.IsNullOrWhiteSpace(RawText))
+        {
+            return null;
+        }
+
+        try
+        {
+            var parser = new LadderParser();
+            var ast = parser.Parse(RawText);
+            var planner = new LadderLayoutPlanner();
+            return planner.Plan(ast);
+        }
+        catch
+        {
+            return null;
+        }
     }
 }
