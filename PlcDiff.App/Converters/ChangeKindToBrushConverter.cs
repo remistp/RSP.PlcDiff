@@ -20,7 +20,7 @@ public sealed class ChangeKindToBrushConverter : IValueConverter
             ChangeKind.Removed => Brushes.IndianRed,
             ChangeKind.Modified => Brushes.Goldenrod,
             ChangeKind.Moved => Brushes.DodgerBlue,
-            _ => Brushes.Gray
+            _ => Brushes.Transparent
         };
     }
 

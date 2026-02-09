@@ -39,7 +39,7 @@
       <Border Grid.Column="0" CornerRadius="6" BorderBrush="#33000000" BorderThickness="1" Padding="8" Margin="0,0,8,0">
         <DockPanel>
           <TextBlock DockPanel.Dock="Top" Text="Programs &amp; Routines" FontWeight="SemiBold" Margin="0,0,0,8" />
-          <TreeView ItemsSource="{Binding ProgramTree}">
+          <TreeView ItemsSource="{Binding ProgramTree}" SelectedItemChanged="TreeView_OnSelectedItemChanged">
             <TreeView.ItemTemplate>
               <HierarchicalDataTemplate ItemsSource="{Binding Children}">
                 <TextBlock Text="{Binding Name}" />
@@ -47,22 +47,6 @@
             </TreeView.ItemTemplate>
           </TreeView>
 
-          <TextBlock DockPanel.Dock="Top" Text="Changes" FontWeight="SemiBold" Margin="0,12,0,8" />
-          <ListView ItemsSource="{Binding ChangeItems}" SelectedItem="{Binding SelectedChange}" BorderThickness="0">
-            <ListView.ItemTemplate>
-              <DataTemplate>
-                <StackPanel Orientation="Horizontal" Margin="0,4">
-                  <ui:SymbolIcon Symbol="{Binding ChangeKind, Converter={StaticResource ChangeKindToSymbolConverter}}"
-                                 Foreground="{Binding ChangeKind, Converter={StaticResource ChangeKindToBrushConverter}}"
-                                 Width="20" Height="20" Margin="0,0,8,0" />
-                  <StackPanel>
-                    <TextBlock Text="{Binding Summary}" FontWeight="SemiBold" />
-                    <TextBlock Text="{Binding Path}" Foreground="#88000000" FontSize="12" />
-                  </StackPanel>
-                </StackPanel>
-              </DataTemplate>
-            </ListView.ItemTemplate>
-          </ListView>
         </DockPanel>
       </Border>
 
@@ -76,39 +60,22 @@
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
               </Grid.RowDefinitions>
-              <TextBlock Grid.Row="0" Text="{Binding SelectedChange.Path}" FontWeight="SemiBold" />
-              <TextBlock Grid.Row="1" Text="HUNK 1: Changed Rungs" FontWeight="SemiBold" Margin="0,8,0,8" />
-              <ItemsControl Grid.Row="2" ItemsSource="{Binding RungHunks}">
+              <TextBlock Grid.Row="0" Text="{Binding SelectedTreeNode.Path}" FontWeight="SemiBold" />
+              <TextBlock Grid.Row="1" Text="{Binding HunkHeader}" FontWeight="SemiBold" Margin="0,8,0,8" />
+              <ItemsControl Grid.Row="2" ItemsSource="{Binding RungRows}">
                 <ItemsControl.ItemTemplate>
                   <DataTemplate>
-                    <StackPanel>
-                      <ItemsControl ItemsSource="{Binding Changes}">
-                        <ItemsControl.ItemTemplate>
-                          <DataTemplate>
-                            <Border BorderBrush="{Binding Change.ChangeKind, Converter={StaticResource ChangeKindToBrushConverter}}"
-                                    BorderThickness="2" CornerRadius="4" Padding="8" Margin="0,0,0,12">
-                              <StackPanel>
-                                <TextBlock Text="{Binding Change.Summary}" FontWeight="SemiBold" Margin="0,0,0,6" />
-                                <Grid>
-                                  <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="*" />
-                                  </Grid.ColumnDefinitions>
-                                  <StackPanel Grid.Column="0" Margin="0,0,8,0">
-                                    <TextBlock Text="Before" FontWeight="SemiBold" Margin="0,0,0,4" />
-                                    <controls:LadderRenderer Tokens="{Binding BeforeTokens}" ChangeKind="{Binding Change.ChangeKind}" />
-                                  </StackPanel>
-                                  <StackPanel Grid.Column="1">
-                                    <TextBlock Text="After" FontWeight="SemiBold" Margin="0,0,0,4" />
-                                    <controls:LadderRenderer Tokens="{Binding AfterTokens}" ChangeKind="{Binding Change.ChangeKind}" />
-                                  </StackPanel>
-                                </Grid>
-                              </StackPanel>
-                            </Border>
-                          </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                      </ItemsControl>
-                    </StackPanel>
+                    <Border BorderBrush="{Binding ChangeKind, Converter={StaticResource ChangeKindToBrushConverter}}"
+                            BorderThickness="2" CornerRadius="4" Padding="8" Margin="0,0,0,12">
+                      <Grid>
+                        <Grid.ColumnDefinitions>
+                          <ColumnDefinition Width="40" />
+                          <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="{Binding Index}" FontWeight="SemiBold" Foreground="DodgerBlue" />
+                        <controls:LadderRenderer Grid.Column="1" Tokens="{Binding Tokens}" ChangeKind="{Binding ChangeKind}" />
+                      </Grid>
+                    </Border>
                   </DataTemplate>
                 </ItemsControl.ItemTemplate>
               </ItemsControl>

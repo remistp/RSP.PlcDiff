@@ -19,6 +19,7 @@ public sealed class MainViewModel : ObservableObject
     private L5xProject? _projectA;
     private L5xProject? _projectB;
     private ChangeItem? _selectedChange;
+    private TreeNodeViewModel? _selectedTreeNode;
 
     public MainViewModel()
     {
@@ -35,8 +36,9 @@ public sealed class MainViewModel : ObservableObject
     public ObservableCollection<ChangeItem> ChangeItems { get; } = new();
     public ObservableCollection<LadderToken> BeforeTokens { get; } = new();
     public ObservableCollection<LadderToken> AfterTokens { get; } = new();
-    public ObservableCollection<RungChangeViewModel> RungChanges { get; } = new();
-    public ObservableCollection<RungHunkViewModel> RungHunks { get; } = new();
+    public ObservableCollection<RungRowViewModel> RungRows { get; } = new();
+
+    public string? HunkHeader { get; private set; }
 
     public ChangeItem? SelectedChange
     {
@@ -45,7 +47,19 @@ public sealed class MainViewModel : ObservableObject
         {
             if (SetProperty(ref _selectedChange, value))
             {
-                UpdateTokens();
+                UpdateRoutineHunk();
+            }
+        }
+    }
+
+    public TreeNodeViewModel? SelectedTreeNode
+    {
+        get => _selectedTreeNode;
+        set
+        {
+            if (SetProperty(ref _selectedTreeNode, value))
+            {
+                UpdateRoutineHunk();
             }
         }
     }
@@ -99,6 +113,7 @@ public sealed class MainViewModel : ObservableObject
 
         SelectedChange = ChangeItems.FirstOrDefault();
         OnPropertyChanged(nameof(ChangeItems));
+        UpdateRoutineHunk();
     }
 
     private void RefreshTree()
@@ -113,10 +128,10 @@ public sealed class MainViewModel : ObservableObject
 
         foreach (var program in project.Programs.Values.OrderBy(program => program.Name))
         {
-            var programNode = new TreeNodeViewModel(program.Name);
+            var programNode = new TreeNodeViewModel(program.Name, program.Name, false);
             foreach (var routine in program.Routines.Values.OrderBy(routine => routine.Name))
             {
-                programNode.Children.Add(new TreeNodeViewModel(routine.Name));
+                programNode.Children.Add(new TreeNodeViewModel(routine.Name, $"{program.Name}/{routine.Name}", true));
             }
 
             ProgramTree.Add(programNode);
@@ -135,8 +150,7 @@ public sealed class MainViewModel : ObservableObject
     {
         BeforeTokens.Clear();
         AfterTokens.Clear();
-        RungChanges.Clear();
-        RungHunks.Clear();
+        RungRows.Clear();
 
         if (SelectedChange == null)
         {
@@ -152,24 +166,87 @@ public sealed class MainViewModel : ObservableObject
         {
             AfterTokens.Add(token);
         }
+    }
 
-        if (!string.IsNullOrWhiteSpace(SelectedChange.Path))
+    private void UpdateRoutineHunk()
+    {
+        RungRows.Clear();
+        HunkHeader = null;
+        OnPropertyChanged(nameof(HunkHeader));
+
+        var path = SelectedTreeNode?.IsRoutine == true
+            ? SelectedTreeNode.Path
+            : SelectedChange?.Path;
+
+        if (string.IsNullOrWhiteSpace(path))
         {
-            var relatedRungs = ChangeItems
-                .Where(change => change.Type == ChangeItemType.Rung
-                    && string.Equals(change.Path, SelectedChange.Path, StringComparison.OrdinalIgnoreCase))
-                .OrderBy(change => change.Summary);
+            return;
+        }
 
-            foreach (var change in relatedRungs)
+        var segments = path.Split('/');
+        if (segments.Length != 2)
+        {
+            return;
+        }
+
+        var programName = segments[0];
+        var routineName = segments[1];
+        var routineA = GetRoutine(_projectA, programName, routineName);
+        var routineB = GetRoutine(_projectB, programName, routineName);
+
+        var rungsA = routineA?.Rungs.ToDictionary(rung => rung.Index) ?? new Dictionary<int, RungModel>();
+        var rungsB = routineB?.Rungs.ToDictionary(rung => rung.Index) ?? new Dictionary<int, RungModel>();
+
+        if (rungsA.Count == 0 && rungsB.Count == 0)
+        {
+            return;
+        }
+
+        var minIndex = rungsA.Keys.Concat(rungsB.Keys).DefaultIfEmpty(0).Min();
+        var maxIndex = rungsA.Keys.Concat(rungsB.Keys).DefaultIfEmpty(0).Max();
+
+        for (var index = minIndex; index <= maxIndex; index++)
+        {
+            rungsA.TryGetValue(index, out var rungA);
+            rungsB.TryGetValue(index, out var rungB);
+
+            if (rungA != null && rungB != null)
             {
-                RungChanges.Add(new RungChangeViewModel(change));
+                if (string.Equals(rungA.NormalizedText, rungB.NormalizedText, StringComparison.Ordinal))
+                {
+                    RungRows.Add(new RungRowViewModel(index, ChangeKind.None, rungA.RawText));
+                }
+                else
+                {
+                    RungRows.Add(new RungRowViewModel(index, ChangeKind.Removed, rungA.RawText));
+                    RungRows.Add(new RungRowViewModel(index, ChangeKind.Added, rungB.RawText));
+                }
             }
-
-            if (RungChanges.Count > 0)
+            else if (rungA != null)
             {
-                RungHunks.Add(new RungHunkViewModel(SelectedChange.Path, RungChanges));
+                RungRows.Add(new RungRowViewModel(index, ChangeKind.Removed, rungA.RawText));
+            }
+            else if (rungB != null)
+            {
+                RungRows.Add(new RungRowViewModel(index, ChangeKind.Added, rungB.RawText));
             }
         }
+
+        HunkHeader = $"HUNK 1: RUNGS {minIndex + 1}-{maxIndex + 1}";
+        OnPropertyChanged(nameof(HunkHeader));
+    }
+
+    private static RoutineModel? GetRoutine(L5xProject? project, string programName, string routineName)
+    {
+        if (project == null)
+        {
+            return null;
+        }
+
+        return project.Programs.TryGetValue(programName, out var program)
+            && program.Routines.TryGetValue(routineName, out var routine)
+            ? routine
+            : null;
     }
 
     private static string? ShowOpenFileDialog()
