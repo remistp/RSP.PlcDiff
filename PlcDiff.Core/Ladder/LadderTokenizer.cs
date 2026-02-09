@@ -96,7 +96,13 @@ public static class LadderTokenizer
             }
 
             var rowOffset = branchRows.Count > 0 ? branchRows.Peek() : 0;
-            depths[match.Index] = Math.Max(0, depthLevel + rowOffset);
+            var computedDepth = Math.Max(0, depthLevel + rowOffset);
+            if (depthLevel == 0)
+            {
+                computedDepth = 0;
+            }
+
+            depths[match.Index] = computedDepth;
             position = match.Index;
         }
 
