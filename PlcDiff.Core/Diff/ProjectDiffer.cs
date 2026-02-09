@@ -159,25 +159,52 @@ public sealed class ProjectDiffer
         var anyChanges = false;
         var rungsA = routineA.Rungs.ToDictionary(rung => rung.Key, StringComparer.OrdinalIgnoreCase);
         var rungsB = routineB.Rungs.ToDictionary(rung => rung.Key, StringComparer.OrdinalIgnoreCase);
+        var rungsByIndexA = routineA.Rungs.ToDictionary(rung => rung.Index);
+        var rungsByIndexB = routineB.Rungs.ToDictionary(rung => rung.Index);
+        var matchedB = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
         foreach (var (key, rungA) in rungsA)
         {
-            if (!rungsB.TryGetValue(key, out var rungB))
+            if (rungsB.TryGetValue(key, out var rungB))
             {
-                report.Changes.Add(new ChangeItem
+                matchedB.Add(key);
+
+                if (!string.Equals(rungA.NormalizedText, rungB.NormalizedText, StringComparison.Ordinal))
                 {
-                    Type = ChangeItemType.Rung,
-                    Path = $"{programName}/{routineName}",
-                    ChangeKind = ChangeKind.Removed,
-                    Summary = $"Rung removed at index {rungA.Index}",
-                    BeforeText = rungA.RawText
-                });
-                anyChanges = true;
+                    report.Changes.Add(new ChangeItem
+                    {
+                        Type = ChangeItemType.Rung,
+                        Path = $"{programName}/{routineName}",
+                        ChangeKind = ChangeKind.Modified,
+                        Summary = $"Rung modified at index {rungA.Index}",
+                        BeforeText = rungA.RawText,
+                        AfterText = rungB.RawText
+                    });
+                    anyChanges = true;
+                    continue;
+                }
+
+                if (rungA.Index != rungB.Index)
+                {
+                    report.Changes.Add(new ChangeItem
+                    {
+                        Type = ChangeItemType.Rung,
+                        Path = $"{programName}/{routineName}",
+                        ChangeKind = ChangeKind.Moved,
+                        Summary = $"Rung moved from {rungA.Index} to {rungB.Index}",
+                        BeforeText = rungA.RawText,
+                        AfterText = rungB.RawText
+                    });
+                    anyChanges = true;
+                }
+
                 continue;
             }
 
-            if (!string.Equals(rungA.NormalizedText, rungB.NormalizedText, StringComparison.Ordinal))
+            if (rungsByIndexB.TryGetValue(rungA.Index, out var sameIndexB)
+                && !matchedB.Contains(sameIndexB.Key))
             {
+                matchedB.Add(sameIndexB.Key);
                 report.Changes.Add(new ChangeItem
                 {
                     Type = ChangeItemType.Rung,
@@ -185,41 +212,39 @@ public sealed class ProjectDiffer
                     ChangeKind = ChangeKind.Modified,
                     Summary = $"Rung modified at index {rungA.Index}",
                     BeforeText = rungA.RawText,
-                    AfterText = rungB.RawText
+                    AfterText = sameIndexB.RawText
                 });
                 anyChanges = true;
                 continue;
             }
 
-            if (rungA.Index != rungB.Index)
+            report.Changes.Add(new ChangeItem
             {
-                report.Changes.Add(new ChangeItem
-                {
-                    Type = ChangeItemType.Rung,
-                    Path = $"{programName}/{routineName}",
-                    ChangeKind = ChangeKind.Moved,
-                    Summary = $"Rung moved from {rungA.Index} to {rungB.Index}",
-                    BeforeText = rungA.RawText,
-                    AfterText = rungB.RawText
-                });
-                anyChanges = true;
-            }
+                Type = ChangeItemType.Rung,
+                Path = $"{programName}/{routineName}",
+                ChangeKind = ChangeKind.Removed,
+                Summary = $"Rung removed at index {rungA.Index}",
+                BeforeText = rungA.RawText
+            });
+            anyChanges = true;
         }
 
         foreach (var (key, rungB) in rungsB)
         {
-            if (!rungsA.ContainsKey(key))
+            if (matchedB.Contains(key))
             {
-                report.Changes.Add(new ChangeItem
-                {
-                    Type = ChangeItemType.Rung,
-                    Path = $"{programName}/{routineName}",
-                    ChangeKind = ChangeKind.Added,
-                    Summary = $"Rung added at index {rungB.Index}",
-                    AfterText = rungB.RawText
-                });
-                anyChanges = true;
+                continue;
             }
+
+            report.Changes.Add(new ChangeItem
+            {
+                Type = ChangeItemType.Rung,
+                Path = $"{programName}/{routineName}",
+                ChangeKind = ChangeKind.Added,
+                Summary = $"Rung added at index {rungB.Index}",
+                AfterText = rungB.RawText
+            });
+            anyChanges = true;
         }
 
         return anyChanges;
