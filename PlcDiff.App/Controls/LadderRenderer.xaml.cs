@@ -134,10 +134,44 @@ public partial class LadderRenderer : UserControl
             }
         }
 
-        if (maxBranchDepth > 0)
+        if (tokens.Count == 0)
         {
-            var branchStartX = leftRailX + 28;
-            var branchEndX = rightRailX - 28;
+            return;
+        }
+
+        var groupedTokens = tokens
+            .GroupBy(token => token.BranchDepth)
+            .ToDictionary(group => group.Key, group => group.ToList());
+        var branchColumns = new List<int>();
+
+        foreach (var (branchDepth, branchTokens) in groupedTokens)
+        {
+            var rowCenterY = railTop + branchDepth * cellHeight + cellHeight / 2;
+            var nonOutputTokens = branchTokens.Where(token => token.Instruction != LadderInstructionType.Ote).ToList();
+            for (var col = 0; col < columns && col < nonOutputTokens.Count; col++)
+            {
+                var token = nonOutputTokens[col];
+                var cellLeft = leftRailX + col * cellWidth + 12;
+                DrawInstruction(token, cellLeft, rowCenterY);
+                if (branchDepth > 0)
+                {
+                    branchColumns.Add(col);
+                }
+            }
+
+            foreach (var outputToken in branchTokens.Where(token => token.Instruction == LadderInstructionType.Ote))
+            {
+                var coilX = leftRailX + (columns - 1) * cellWidth + 12;
+                DrawInstruction(outputToken, coilX, rowCenterY);
+            }
+        }
+
+        if (maxBranchDepth > 0 && branchColumns.Count > 0)
+        {
+            var minCol = branchColumns.Min();
+            var maxCol = branchColumns.Max();
+            var branchStartX = leftRailX + minCol * cellWidth + 6;
+            var branchEndX = leftRailX + (maxCol + 1) * cellWidth + 6;
             var branchTop = railTop + cellHeight / 2;
             var branchBottom = railTop + maxBranchDepth * cellHeight + cellHeight / 2;
 
@@ -160,33 +194,6 @@ public partial class LadderRenderer : UserControl
                 Stroke = lineBrush,
                 StrokeThickness = 2
             });
-        }
-
-        if (tokens.Count == 0)
-        {
-            return;
-        }
-
-        var groupedTokens = tokens
-            .GroupBy(token => token.BranchDepth)
-            .ToDictionary(group => group.Key, group => group.ToList());
-
-        foreach (var (branchDepth, branchTokens) in groupedTokens)
-        {
-            var rowCenterY = railTop + branchDepth * cellHeight + cellHeight / 2;
-            var nonOutputTokens = branchTokens.Where(token => token.Instruction != LadderInstructionType.Ote).ToList();
-            for (var col = 0; col < columns && col < nonOutputTokens.Count; col++)
-            {
-                var token = nonOutputTokens[col];
-                var cellLeft = leftRailX + col * cellWidth + 12;
-                DrawInstruction(token, cellLeft, rowCenterY);
-            }
-
-            foreach (var outputToken in branchTokens.Where(token => token.Instruction == LadderInstructionType.Ote))
-            {
-                var coilX = leftRailX + (columns - 1) * cellWidth + 12;
-                DrawInstruction(outputToken, coilX, rowCenterY);
-            }
         }
     }
 
