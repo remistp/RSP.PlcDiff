@@ -138,7 +138,12 @@ public partial class LadderRenderer : UserControl
             return;
         }
 
-        var groupedTokens = tokens
+        var outputCoil = tokens.LastOrDefault(token => token.Instruction == LadderInstructionType.Ote);
+        var renderTokens = outputCoil == null
+            ? tokens
+            : tokens.Where(token => token != outputCoil).ToList();
+
+        var groupedTokens = renderTokens
             .GroupBy(token => token.BranchDepth)
             .ToDictionary(group => group.Key, group => group.ToList());
 
@@ -151,6 +156,13 @@ public partial class LadderRenderer : UserControl
                 var cellLeft = leftRailX + col * cellWidth + 12;
                 DrawInstruction(token, cellLeft, rowCenterY);
             }
+        }
+
+        if (outputCoil != null)
+        {
+            var coilRowCenterY = railTop + cellHeight / 2;
+            var coilX = rightRailX - 70;
+            DrawInstruction(outputCoil, coilX, coilRowCenterY);
         }
     }
 
