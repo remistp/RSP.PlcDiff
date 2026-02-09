@@ -35,6 +35,7 @@ public sealed class MainViewModel : ObservableObject
     public ObservableCollection<ChangeItem> ChangeItems { get; } = new();
     public ObservableCollection<LadderToken> BeforeTokens { get; } = new();
     public ObservableCollection<LadderToken> AfterTokens { get; } = new();
+    public ObservableCollection<RungChangeViewModel> RungChanges { get; } = new();
 
     public ChangeItem? SelectedChange
     {
@@ -133,6 +134,7 @@ public sealed class MainViewModel : ObservableObject
     {
         BeforeTokens.Clear();
         AfterTokens.Clear();
+        RungChanges.Clear();
 
         if (SelectedChange == null)
         {
@@ -147,6 +149,19 @@ public sealed class MainViewModel : ObservableObject
         foreach (var token in LadderTokenizer.Tokenize(SelectedChange.AfterText))
         {
             AfterTokens.Add(token);
+        }
+
+        if (!string.IsNullOrWhiteSpace(SelectedChange.Path))
+        {
+            var relatedRungs = ChangeItems
+                .Where(change => change.Type == ChangeItemType.Rung
+                    && string.Equals(change.Path, SelectedChange.Path, StringComparison.OrdinalIgnoreCase))
+                .OrderBy(change => change.Summary);
+
+            foreach (var change in relatedRungs)
+            {
+                RungChanges.Add(new RungChangeViewModel(change));
+            }
         }
     }
 
