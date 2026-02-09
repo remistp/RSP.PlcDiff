@@ -96,6 +96,7 @@ public sealed class MainViewModel : ObservableObject
         }
 
         SelectedChange = ChangeItems.FirstOrDefault();
+        OnPropertyChanged(nameof(ChangeItems));
     }
 
     private void RefreshTree()
@@ -125,6 +126,7 @@ public sealed class MainViewModel : ObservableObject
         ChangeItems.Clear();
         SelectedChange = null;
         CompareCommand.NotifyCanExecuteChanged();
+        OnPropertyChanged(nameof(ChangeItems));
     }
 
     private void UpdateTokens()
