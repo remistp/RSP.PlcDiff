@@ -182,6 +182,9 @@ public partial class LadderRenderer : UserControl
             case "TON":
                 DrawTimer(placement.Operands, x, centerY);
                 break;
+            case "MOV":
+                DrawMove(placement.Operands, x, centerY);
+                break;
         }
     }
 
@@ -282,6 +285,83 @@ public partial class LadderRenderer : UserControl
         Surface.Children.Add(label);
 
         AddOperandText(operand, x, centerY + 16);
+    }
+
+
+    private void DrawMove(string operands, double x, double centerY)
+    {
+        var width = 84.0;
+        var height = 36.0;
+        var left = x;
+        var top = centerY - height / 2;
+
+        var rect = new Rectangle
+        {
+            Width = width,
+            Height = height,
+            Stroke = Brushes.Black,
+            StrokeThickness = 1.5,
+            Fill = Brushes.White
+        };
+
+        Canvas.SetLeft(rect, left);
+        Canvas.SetTop(rect, top);
+        Surface.Children.Add(rect);
+
+        var label = new TextBlock
+        {
+            Text = "MOV",
+            FontWeight = FontWeights.SemiBold,
+            FontSize = 11
+        };
+        Canvas.SetLeft(label, left + 4);
+        Canvas.SetTop(label, top + 2);
+        Surface.Children.Add(label);
+
+        var (source, destination) = SplitMoveOperands(operands);
+
+        var sourceText = new TextBlock
+        {
+            Text = $"Src: {source}",
+            FontSize = 9,
+            Foreground = Brushes.Black,
+            Width = width - 8,
+            TextTrimming = TextTrimming.CharacterEllipsis
+        };
+        Canvas.SetLeft(sourceText, left + 4);
+        Canvas.SetTop(sourceText, top + 14);
+        Surface.Children.Add(sourceText);
+
+        var destinationText = new TextBlock
+        {
+            Text = $"Dst: {destination}",
+            FontSize = 9,
+            Foreground = Brushes.Black,
+            Width = width - 8,
+            TextTrimming = TextTrimming.CharacterEllipsis
+        };
+        Canvas.SetLeft(destinationText, left + 4);
+        Canvas.SetTop(destinationText, top + 24);
+        Surface.Children.Add(destinationText);
+    }
+
+    private static (string Source, string Destination) SplitMoveOperands(string operands)
+    {
+        if (string.IsNullOrWhiteSpace(operands))
+        {
+            return (string.Empty, string.Empty);
+        }
+
+        var commaIndex = operands.IndexOf(',');
+        if (commaIndex < 0)
+        {
+            var single = operands.Trim();
+            return (single, string.Empty);
+        }
+
+        var source = operands[..commaIndex].Trim();
+        var destination = operands[(commaIndex + 1)..].Trim();
+        return (source, destination);
     }
 
     private void AddOperandText(string operand, double x, double y)

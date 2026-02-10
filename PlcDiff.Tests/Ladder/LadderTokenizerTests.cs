@@ -37,6 +37,19 @@ public sealed class LadderTokenizerTests
         Assert.Equal("Timer1, 1000", tokens[^1].Operand);
     }
 
+
+    [Fact]
+    public void Tokenize_ParsesMovInstructionWithSourceAndDestination()
+    {
+        var rung = "XIC(StartBit) MOV(SourceTag, DestinationTag) OTE(DoneBit);";
+
+        var tokens = LadderTokenizer.Tokenize(rung);
+
+        Assert.Equal(3, tokens.Count);
+        Assert.Equal(LadderInstructionType.Mov, tokens[1].Instruction);
+        Assert.Equal("SourceTag, DestinationTag", tokens[1].Operand);
+    }
+
     [Fact]
     public void Tokenize_ReturnsEmptyForMalformed()
     {

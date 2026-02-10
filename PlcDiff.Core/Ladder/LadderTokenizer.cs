@@ -5,7 +5,7 @@ namespace PlcDiff.Core.Ladder;
 public static class LadderTokenizer
 {
     private static readonly Regex InstructionRegex = new(
-        @"\b(XIC|XIO|OTE|TON)\s*\(\s*([^)]*)\s*\)",
+        @"\b(XIC|XIO|OTE|TON|MOV)\s*\(\s*([^)]*)\s*\)",
         RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
     public static IReadOnlyList<LadderToken> Tokenize(string? rungText)
@@ -120,6 +120,9 @@ public static class LadderTokenizer
                 return true;
             case "TON":
                 instruction = LadderInstructionType.Ton;
+                return true;
+            case "MOV":
+                instruction = LadderInstructionType.Mov;
                 return true;
             default:
                 instruction = default;

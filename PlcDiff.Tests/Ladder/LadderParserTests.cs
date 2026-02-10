@@ -29,4 +29,16 @@ public sealed class LadderParserTests
         Assert.Equal(2, parallel.Branches.Count);
         Assert.IsType<SeriesNode>(parallel.Branches[1]);
     }
+    [Fact]
+    public void Parse_ParsesMovInstructionOperands()
+    {
+        var parser = new LadderParser();
+        var ast = parser.Parse("XIC(A) MOV(Source, Destination) OTE(B);");
+
+        Assert.Equal(3, ast.Children.Count);
+        var mov = Assert.IsType<InstructionNode>(ast.Children[1]);
+        Assert.Equal("MOV", mov.Opcode);
+        Assert.Equal("Source, Destination", mov.Operands);
+    }
+
 }

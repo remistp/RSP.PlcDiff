@@ -5,5 +5,6 @@ public enum LadderInstructionType
     Xic,
     Xio,
     Ote,
-    Ton
+    Ton,
+    Mov
 }
