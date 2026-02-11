@@ -1,0 +1,89 @@
+<Window x:Class="PlcDiff.App.Views.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:ui="http://schemas.modernwpf.com/2019"
+        xmlns:viewModels="clr-namespace:PlcDiff.App.ViewModels"
+        xmlns:converters="clr-namespace:PlcDiff.App.Converters"
+        xmlns:controls="clr-namespace:PlcDiff.App.Controls"
+        mc:Ignorable="d"
+        Title="PlcDiff" Height="700" Width="1200">
+  <Window.DataContext>
+    <viewModels:MainViewModel />
+  </Window.DataContext>
+
+  <Window.Resources>
+    <converters:ChangeKindToBrushConverter x:Key="ChangeKindToBrushConverter" />
+    <converters:ChangeKindToSymbolConverter x:Key="ChangeKindToSymbolConverter" />
+  </Window.Resources>
+
+  <Grid>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="*" />
+    </Grid.RowDefinitions>
+
+    <ui:CommandBar DefaultLabelPosition="Bottom">
+      <ui:AppBarButton Icon="OpenFile" Label="Open A" Command="{Binding OpenProjectACommand}" />
+      <ui:AppBarButton Icon="OpenFile" Label="Open B" Command="{Binding OpenProjectBCommand}" />
+      <ui:AppBarButton Icon="Play" Label="Compare" Command="{Binding CompareCommand}" />
+    </ui:CommandBar>
+
+    <Grid Grid.Row="1" Margin="12">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="2*" />
+        <ColumnDefinition Width="5*" />
+      </Grid.ColumnDefinitions>
+
+      <Border Grid.Column="0" CornerRadius="6" BorderBrush="#33000000" BorderThickness="1" Padding="8" Margin="0,0,8,0">
+        <DockPanel>
+          <TextBlock DockPanel.Dock="Top" Text="Programs &amp; Routines" FontWeight="SemiBold" Margin="0,0,0,8" />
+          <TreeView ItemsSource="{Binding ProgramTree}" SelectedItemChanged="TreeView_OnSelectedItemChanged">
+            <TreeView.ItemTemplate>
+              <HierarchicalDataTemplate ItemsSource="{Binding Children}">
+                <TextBlock Text="{Binding Name}" />
+              </HierarchicalDataTemplate>
+            </TreeView.ItemTemplate>
+          </TreeView>
+
+        </DockPanel>
+      </Border>
+
+      <Border Grid.Column="1" CornerRadius="6" BorderBrush="#33000000" BorderThickness="1" Padding="8">
+        <DockPanel>
+          <TextBlock DockPanel.Dock="Top" Text="Hunk Diff" FontWeight="SemiBold" Margin="0,0,0,8" />
+          <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <Grid>
+              <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+              </Grid.RowDefinitions>
+              <TextBlock Grid.Row="0" Text="{Binding SelectedTreeNode.Path}" FontWeight="SemiBold" />
+              <TextBlock Grid.Row="1" Text="{Binding HunkHeader}" FontWeight="SemiBold" Margin="0,8,0,8" />
+              <ItemsControl Grid.Row="2" ItemsSource="{Binding RungRows}">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate>
+                    <Border BorderBrush="{Binding ChangeKind, Converter={StaticResource ChangeKindToBrushConverter}}"
+                            BorderThickness="2" CornerRadius="4" Padding="8" Margin="0,0,0,12">
+                      <Grid>
+                        <Grid.ColumnDefinitions>
+                          <ColumnDefinition Width="40" />
+                          <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="{Binding Index}" FontWeight="SemiBold" Foreground="DodgerBlue" />
+                        <controls:LadderRenderer Grid.Column="1" RawText="{Binding RawText}" ChangeKind="{Binding ChangeKind}"
+                                                 ToolTip="{Binding RawText}" />
+                      </Grid>
+                    </Border>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </Grid>
+          </ScrollViewer>
+        </DockPanel>
+      </Border>
+    </Grid>
+  </Grid>
+</Window>
